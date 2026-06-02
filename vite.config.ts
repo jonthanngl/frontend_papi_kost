@@ -16,7 +16,7 @@ export default defineConfig(() => {
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
       proxy: {
         '/api': {
-          target: 'http://localhost:8080', 
+          target: 'http://localhost:8080', // Pastikan port ini sama dengan server Spring Boot-mu
           changeOrigin: true,
           secure: false,
         }
