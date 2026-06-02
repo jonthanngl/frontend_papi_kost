@@ -16,7 +16,7 @@ export default defineConfig(() => {
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
       proxy: {
         '/api': {
-          target: 'http://localhost:3000', // Ini port server bohongan (Node.js) Anda
+          target: 'http://localhost:8080', // Sudah diubah ke port default Spring Boot
           changeOrigin: true,
           secure: false,
         }
