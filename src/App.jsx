@@ -71,15 +71,9 @@ export default function App() {
   });
 
   // Sub-pages
-  // pencari: "beranda" | "biodata" | "kamar-saya" | "notifikasi"
-  // kamar-saya sub: "laporan" | "masa-sewa" | "fasilitas"
   const [userPage, setUserPage] = useState("beranda");
   const [kamarSayaTab, setKamarSayaTab] = useState("laporan");
-
-  // admin: "verifikasi-pemilik" | "verifikasi-berkas" | "pengajuan-owner" | "tiket-perbaikan"
   const [adminPage, setAdminPage] = useState("verifikasi-data-diri");
-
-  // owner: "dashboard" | "manajemen-kamar" | "pengajuan-sewa" | "tiket-perbaikan" | "keuangan"
   const [ownerPage, setOwnerPage] = useState("dashboard");
 
   // Kost & room
@@ -282,7 +276,6 @@ export default function App() {
   };
 
   const fetchReservationBill = () => {
-    // Kalkulasi lokal — tidak perlu network request ke backend
     const total = calcTipe === "solo"
       ? calcHargaDasar * calcDurasi
       : (calcHargaDasar / calcJumlahOrang) * calcDurasi;
@@ -416,7 +409,8 @@ export default function App() {
       const r = await fetch(`${API_URL}/api/invite`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fromUserId: currentUser.id, fromUserName: currentUser.name,
+          fromUserId: currentUser.id, 
+          fromUserName: currentUser?.name || currentUser?.username || "User", // ✨ Jaring Pengaman
           toUserId: inviteTargetId, kamarId: selectedKamar.id,
           namaKost: selectedKamar.namaKost, hargaDasar: selectedKamar.hargaDasar,
           jumlahOrang: inviteJumlah, durasi: inviteDurasi
@@ -623,7 +617,10 @@ export default function App() {
                 <p className="text-[10px] text-emerald-400 font-mono">
                   {currentUser.role === "pencari" ? "Penyewa" : currentUser.role === "pemilik" ? "Owner Kost" : "Administrator"}
                 </p>
-                <p className="text-xs font-bold text-white leading-none">{currentUser.name}</p>
+                {/* ✨ JARING PENGAMAN: Jika name kosong, tampilkan username atau User ✨ */}
+                <p className="text-xs font-bold text-white leading-none">
+                  {currentUser?.name || currentUser?.username || "User"}
+                </p>
               </div>
             </div>
 
@@ -653,10 +650,14 @@ export default function App() {
                   {/* Status verifikasi di sidebar */}
                   <div className="hidden lg:flex items-center gap-3 px-1 pb-2 border-b border-neutral-100">
                     <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-sm">
-                      {currentUser.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                      {/* ✨ JARING PENGAMAN: Mencegah error split is not a function ✨ */}
+                      {(currentUser?.name || currentUser?.username || "U").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-neutral-800">{currentUser.name}</h4>
+                      {/* ✨ JARING PENGAMAN: Nama profil ✨ */}
+                      <h4 className="text-sm font-bold text-neutral-800">
+                        {currentUser?.name || currentUser?.username || "User"}
+                      </h4>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                         biodata?.verifikasiStatus === "DISETUJUI" ? "bg-emerald-100 text-emerald-700" :
                         biodata?.verifikasiStatus === "PENDING" ? "bg-amber-100 text-amber-700" :
@@ -673,7 +674,7 @@ export default function App() {
                   {[
                     { key: "beranda", icon: <Home className="h-4 w-4" />, label: "Cari Kost" },
                     { key: "biodata", icon: <User className="h-4 w-4" />, label: "Data Diri" },
-                    { key: "kamar-saya", icon: <DoorOpen className="h-4 w-4" />, label: "Kamar Saya", hidden: !currentUser.hasKamar },
+                    { key: "kamar-saya", icon: <DoorOpen className="h-4 w-4" />, label: "Kamar Saya", hidden: !currentUser?.hasKamar },
                     { key: "notifikasi", icon: <BellIcon className="h-4 w-4" />, label: "Notifikasi", badge: pendingInvites.length },
                   ].filter(item => !item.hidden).map(item => (
                     <button key={item.key}
@@ -689,12 +690,12 @@ export default function App() {
                   ))}
                 </nav>
 
-                {currentUser.hasKamar && (
+                {currentUser?.hasKamar && (
                   <div className="mt-auto hidden lg:block bg-emerald-50 border border-emerald-200 rounded-xl p-3">
                     <p className="text-[10px] font-bold text-emerald-800 mb-0.5 flex items-center gap-1">
                       <Home className="h-3 w-3" /> Kamar Aktif
                     </p>
-                    <p className="text-xs font-bold text-emerald-900">{currentUser.namaKost}</p>
+                    <p className="text-xs font-bold text-emerald-900">{currentUser?.namaKost || "Kost Anda"}</p>
                   </div>
                 )}
               </aside>
@@ -879,8 +880,8 @@ export default function App() {
                       </div>
                       <div className="flex-1">
                         <p className="text-[10px] text-emerald-300 font-bold uppercase tracking-wider">Kamar Aktif</p>
-                        <h3 className="text-lg font-black">{currentUser.namaKost}</h3>
-                        <p className="text-xs text-emerald-200 mt-0.5">Kamar #{currentUser.kamarId} • Status: Aktif</p>
+                        <h3 className="text-lg font-black">{currentUser?.namaKost || "Belum Ada Kost"}</h3>
+                        <p className="text-xs text-emerald-200 mt-0.5">Kamar #{currentUser?.kamarId || "-"} • Status: Aktif</p>
                       </div>
                       <div className="bg-emerald-700/60 rounded-xl px-4 py-2 text-center">
                         <p className="text-[10px] text-emerald-300">Masa Sewa</p>
@@ -1732,4 +1733,4 @@ export default function App() {
       )}
     </div>
   );
-} 
+}
