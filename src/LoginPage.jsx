@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { Layers, ShieldAlert, Key, UserPlus, ArrowLeft, Eye, EyeOff, User, Mail, Lock, Home, Search } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
+// ✨ TAMBAHAN UTAMA: Menangkap URL backend dari environment Vercel ✨
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
 export default function LoginPage({ onLoginSuccess }) {
   const [mode, setMode] = useState("login"); // "login" | "register"
 
@@ -25,8 +28,6 @@ export default function LoginPage({ onLoginSuccess }) {
   const [regSuccess, setRegSuccess] = useState("");
 
   // ─── Helper: normalisasi response backend ──────────────────────────────────
-  // Backend mengembalikan { success, user: { id, username, name, email, role, hasKamar } }
-  // Frontend butuh field langsung di root object
   const normalizeUserData = (data) => {
     const u = data.user || data;
     return {
@@ -48,18 +49,27 @@ export default function LoginPage({ onLoginSuccess }) {
     setErrorMsg("");
     setLoading(true);
     try {
-      const response = await fetch("/api/auth/login", {
+      // ✨ PERUBAHAN: Menambahkan API_URL di depan endpoint ✨
+      const response = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: username.trim(), password }),
       });
+      
+      // ✨ PERUBAHAN: Mencegah error "Unexpected token T" jika server membalas HTML ✨
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Endpoint tidak ditemukan atau server membalas dengan format yang salah.");
+      }
+
       const data = await response.json();
+      
       if (!response.ok || !data.success) {
         throw new Error(data.error || "Username atau password salah!");
       }
       onLoginSuccess(normalizeUserData(data));
     } catch (err) {
-      setErrorMsg(err.message || "Gagal tersambung ke server. Pastikan backend sudah berjalan.");
+      setErrorMsg(err.message || "Gagal tersambung ke server. Pastikan URL API sudah benar.");
     } finally {
       setLoading(false);
     }
@@ -82,7 +92,8 @@ export default function LoginPage({ onLoginSuccess }) {
 
     setRegLoading(true);
     try {
-      const response = await fetch("/api/auth/register", {
+      // ✨ PERUBAHAN: Menambahkan API_URL di depan endpoint ✨
+      const response = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -93,13 +104,21 @@ export default function LoginPage({ onLoginSuccess }) {
           role: regRole,
         }),
       });
+
+      // ✨ PERUBAHAN: Mencegah error "Unexpected token T" jika server membalas HTML ✨
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Endpoint tidak ditemukan atau server membalas dengan format yang salah.");
+      }
+
       const data = await response.json();
+      
       if (!response.ok || !data.success) {
         throw new Error(data.error || "Gagal mendaftar.");
       }
       onLoginSuccess(normalizeUserData(data));
     } catch (err) {
-      setRegError(err.message || "Gagal tersambung ke server. Pastikan backend sudah berjalan.");
+      setRegError(err.message || "Gagal tersambung ke server. Pastikan URL API sudah benar.");
     } finally {
       setRegLoading(false);
     }
@@ -185,7 +204,6 @@ export default function LoginPage({ onLoginSuccess }) {
                 </button>
               </form>
 
-        
               <div className="mt-5 pt-5 border-t border-neutral-100 text-center">
                 <p className="text-xs text-neutral-500 mb-3">Belum punya akun?</p>
                 <button onClick={() => { setMode("register"); setErrorMsg(""); }}
